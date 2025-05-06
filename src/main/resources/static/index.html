@@ -1,11 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Projeto Cadastro</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cadastro de Produtos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 0.75rem;
+            font-weight: bold;
+        }
+        input, select, button {
+            padding: 0.5rem;
+            font-size: 1rem;
+            margin-top: 0.25rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            margin-top: 1.5rem;
+            cursor: pointer;
+        }
+        #message {
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        #message.success { color: green; }
+        #message.error   { color: red; }
+    </style>
 </head>
 <body>
-<h1>Meu projeto</h1>
+
+<h1>Cadastro de Produtos</h1>
+
+<form id="productForm">
+    <label for="descricao">Descrição</label>
+    <input type="text" id="descricao" name="descricao" required />
+
+    <label for="codigo">Código</label>
+    <input type="text" id="codigo" name="codigo" required />
+
+    <label for="categoria">Categoria</label>
+    <select id="categoria" name="categoria" required>
+        <option value="">— selecione —</option>
+        <option value="Informática">Informática</option>
+        <option value="Eletrodomésticos">Eletrodomésticos</option>
+        <option value="Móveis">Móveis</option>
+        <option value="Outros">Outros</option>
+    </select>
+
+    <button type="submit">Cadastrar</button>
+</form>
+
+<div id="message"></div>
+
+<script>
+    const form = document.getElementById('productForm');
+    const messageEl = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        messageEl.textContent = '';
+        messageEl.className = '';
+
+        // Monta o objeto a ser enviado
+        const payload = {
+            descricao: document.getElementById('descricao').value.trim(),
+            codigo:    document.getElementById('codigo').value.trim(),
+            categoria: document.getElementById('categoria').value
+        };
+
+        try {
+            const resp = await fetch('/api/produtos', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload)
+            });
+
+            if (resp.ok) {
+                const produto = await resp.json();
+                messageEl.textContent = `Produto cadastrado com ID ${produto.id}!`;
+                messageEl.classList.add('success');
+                form.reset();
+            } else if (resp.status === 400) {
+                messageEl.textContent = 'Erro: Código já existe ou dados inválidos.';
+                messageEl.classList.add('error');
+            } else {
+                messageEl.textContent = `Erro inesperado (status ${resp.status}).`;
+                messageEl.classList.add('error');
+            }
+        } catch (err) {
+            console.error(err);
+            messageEl.textContent = 'Não foi possível conectar ao servidor.';
+            messageEl.classList.add('error');
+        }
+    });
+</script>
 
 </body>
 </html>
